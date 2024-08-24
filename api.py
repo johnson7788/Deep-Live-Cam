@@ -39,6 +39,8 @@ class LiveCam():
         os.makedirs(self.output_dir, exist_ok=True)
         modules.globals.headless = True
         modules.globals.execution_providers = decode_execution_providers(["cuda"])
+        modules.globals.execution_threads = 1
+        modules.globals.max_memory = 16
 
     def setup_modules_globals(self, key_values_dict):
         """设置modules.globals的各种属性"""
@@ -57,8 +59,6 @@ class LiveCam():
             'keep_frames': options.get('keep_frames', False),
             'many_faces': options.get('many_faces', False),
             'nsfw_filter': options.get('nsfw_filter', False),
-            'max_memory': options.get('max_memory', suggest_max_memory()),
-            'execution_threads': options.get('execution_threads', suggest_execution_threads())
         })
         update_status('Processing image to image...')
         try:
@@ -92,8 +92,6 @@ class LiveCam():
             'nsfw_filter': options.get('nsfw_filter', False),
             'video_encoder': options.get('video_encoder', 'libx264'),
             'video_quality': options.get('video_quality', 18),
-            'max_memory': options.get('max_memory', suggest_max_memory()),
-            'execution_threads': options.get('execution_threads', suggest_execution_threads())
         })
         update_status('Processing image to video...')
         create_temp(modules.globals.target_path)

@@ -1,3 +1,4 @@
+import os
 from typing import Any, List
 import cv2
 import insightface
@@ -62,8 +63,10 @@ def process_frame(source_face: Face, temp_frame: Frame) -> Frame:
 
 
 def process_frames(source_path: str, temp_frame_paths: List[str], progress: Any = None) -> None:
+    assert os.path.exists(source_path), f"sourcepath {source_path} does not exist."
     source_face = get_one_face(cv2.imread(source_path))
     for temp_frame_path in temp_frame_paths:
+        assert os.path.exists(temp_frame_path), f"temp_frame_path {temp_frame_path} does not exist."
         temp_frame = cv2.imread(temp_frame_path)
         try:
             result = process_frame(source_face, temp_frame)
