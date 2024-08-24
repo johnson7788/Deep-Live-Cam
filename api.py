@@ -9,12 +9,11 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 import shutil
 import warnings
 from flask import Flask, request, jsonify, send_file
-from werkzeug.utils import secure_filename
 import modules.globals
 import modules.metadata
 import modules.ui as ui
 from modules.core import encode_execution_providers, decode_execution_providers, suggest_max_memory, suggest_execution_providers, suggest_execution_threads, \
-    limit_resources, release_resources, pre_check, update_status, destroy
+    limit_resources, release_resources, pre_check, update_status,destroy
 from modules.processors.frame.core import get_frame_processors_modules
 from modules.utilities import has_image_extension, is_image, is_video, detect_fps, create_video, extract_frames, \
     get_temp_frame_paths, restore_audio, create_temp, move_temp, clean_temp, normalize_output_path
@@ -32,6 +31,8 @@ class LiveCam():
         self.output_dir = "outputs"
         os.makedirs(self.upload_dir, exist_ok=True)
         os.makedirs(self.output_dir, exist_ok=True)
+        modules.globals.headless = True
+        modules.globals.execution_providers = decode_execution_providers(["cuda"])
 
     def setup_modules_globals(self, key_values_dict):
         """设置modules.globals的各种属性"""
@@ -51,7 +52,6 @@ class LiveCam():
             'many_faces': options.get('many_faces', False),
             'nsfw_filter': options.get('nsfw_filter', False),
             'max_memory': options.get('max_memory', suggest_max_memory()),
-            'execution_providers': decode_execution_providers(options.get('execution_provider', ['cpu'])),
             'execution_threads': options.get('execution_threads', suggest_execution_threads())
         })
         update_status('Processing image to image...')
@@ -74,6 +74,7 @@ class LiveCam():
             return False
 
     def process_image_to_video(self, source_path, target_path, output_path, options):
+        # 看是否给出文件路径还是文件目录
         output_path = normalize_output_path(source_path, target_path, output_path)
         self.setup_modules_globals(key_values_dict={
             'source_path': source_path,
@@ -88,7 +89,6 @@ class LiveCam():
             'video_encoder': options.get('video_encoder', 'libx264'),
             'video_quality': options.get('video_quality', 18),
             'max_memory': options.get('max_memory', suggest_max_memory()),
-            'execution_providers': decode_execution_providers(options.get('execution_provider', ['cpu'])),
             'execution_threads': options.get('execution_threads', suggest_execution_threads())
         })
         update_status('Processing image to video...')
@@ -136,7 +136,7 @@ def upload_file_api():
         return jsonify({"code": 4003, 'msg': 'file Name is empty', "data": None}), 400
     logging.info(f"接收到上传文件请求,收到的文件名为：{file.filename}")
     if file:
-        filename = secure_filename(file.filename.replace(" ", "_"))
+        filename = file.filename.replace(" ", "_")
         file_path = os.path.join(livecam_instance.upload_dir, filename)
         file.save(file_path)
         file_path = file_path.split("uploads/", 1)[1]
@@ -155,8 +155,8 @@ def image_to_image():
     if not (allowed_file(source_filename) and allowed_file(target_filename)):
         return jsonify({'error': 'Invalid file format'}), 400
 
-    source_path = os.path.join(livecam_instance.upload_dir, secure_filename(source_filename))
-    target_path = os.path.join(livecam_instance.upload_dir, secure_filename(target_filename))
+    source_path = os.path.join(livecam_instance.upload_dir, source_filename)
+    target_path = os.path.join(livecam_instance.upload_dir, target_filename)
     output_path = os.path.join(livecam_instance.output_dir, 'output_image.png')
 
     if not os.path.exists(source_path) or not os.path.exists(target_path):
@@ -181,12 +181,11 @@ def image_to_video():
     if not (allowed_file(source_filename) and allowed_file(target_filename)):
         return jsonify({'error': 'Invalid file format'}), 400
 
-    source_path = os.path.join(livecam_instance.upload_dir, secure_filename(source_filename))
-    target_path = os.path.join(livecam_instance.upload_dir, secure_filename(target_filename))
-    output_path = os.path.join(livecam_instance.output_dir, 'output_video.mp4')
-
+    source_path = os.path.join(livecam_instance.upload_dir, source_filename)
+    target_path = os.path.join(livecam_instance.upload_dir, target_filename)
     if not os.path.exists(source_path) or not os.path.exists(target_path):
-        return jsonify({'error': 'File not found'}), 404
+        return jsonify({'error': 'source_path 或者 target_path not found'}), 404
+    output_path = os.path.join(livecam_instance.output_dir, 'output_video.mp4')
 
     result = livecam_instance.process_image_to_video(source_path, target_path, output_path, data)
 
