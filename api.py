@@ -61,8 +61,6 @@ class LiveCam():
             'execution_threads': options.get('execution_threads', suggest_execution_threads())
         })
         update_status('Processing image to image...')
-        if modules.globals.nsfw_filter and ui.check_and_ignore_nsfw(modules.globals.target_path, destroy):
-            return False
         try:
             shutil.copy2(modules.globals.target_path, modules.globals.output_path)
         except Exception as e:
@@ -98,8 +96,6 @@ class LiveCam():
             'execution_threads': options.get('execution_threads', suggest_execution_threads())
         })
         update_status('Processing image to video...')
-        if modules.globals.nsfw_filter and ui.check_and_ignore_nsfw(modules.globals.target_path, destroy):
-            return False
         create_temp(modules.globals.target_path)
         extract_frames(modules.globals.target_path)
         temp_frame_paths = get_temp_frame_paths(modules.globals.target_path)
