@@ -39,8 +39,8 @@ class LiveCam():
         os.makedirs(self.output_dir, exist_ok=True)
         modules.globals.headless = True
         modules.globals.execution_providers = decode_execution_providers(["cuda"])
-        modules.globals.execution_threads = 1
-        modules.globals.max_memory = 16
+        modules.globals.execution_threads = 2  # 线程会影响GPU的使用量，1个线程使用3G显存
+        modules.globals.max_memory = 16  #内存使用量
 
     def setup_modules_globals(self, key_values_dict):
         """设置modules.globals的各种属性"""
@@ -54,9 +54,6 @@ class LiveCam():
             'target_path': target_path,
             'output_path': output_path,
             'frame_processors': options.get('frame_processor', ['face_swapper']),
-            'keep_fps': options.get('keep_fps', False),
-            'keep_audio': options.get('keep_audio', True),
-            'keep_frames': options.get('keep_frames', False),
             'many_faces': options.get('many_faces', False),
             'nsfw_filter': options.get('nsfw_filter', False),
         })
@@ -85,13 +82,13 @@ class LiveCam():
             'target_path': target_path,
             'output_path': output_path,
             'frame_processors': options.get('frame_processor', ['face_swapper']),
-            'keep_fps': options.get('keep_fps', False),
+            'keep_fps': options.get('keep_fps', True),  #默认保持fps
             'keep_audio': options.get('keep_audio', True),
-            'keep_frames': options.get('keep_frames', False),
+            'keep_frames': options.get('keep_frames', False), # 不删除帧文件当创建完成视频后
             'many_faces': options.get('many_faces', False),
             'nsfw_filter': options.get('nsfw_filter', False),
-            'video_encoder': options.get('video_encoder', 'libx264'),
-            'video_quality': options.get('video_quality', 18),
+            'video_encoder': options.get('video_encoder', 'libx264'),  #支持选项['libx264', 'libx265', 'libvpx-vp9']
+            'video_quality': options.get('video_quality', 18), #[0-51]
         })
         update_status('Processing image to video...')
         create_temp(modules.globals.target_path)
@@ -123,6 +120,15 @@ class LiveCam():
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+@app.route("/ping", methods=['GET', 'POST'])
+def ping():
+    """
+    测试
+    :return:
+    :rtype:
+    """
+    return jsonify("Pong")
 
 @app.route("/api/upload_file", methods=['POST'])
 def upload_file_api():
