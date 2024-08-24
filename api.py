@@ -1,9 +1,15 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# @Date  : 2024/8/24 15:28
+# @File  : api.py
+# @Author: Johnson
+# @Desc  :  API，需要安装onnxruntime-gpu==1.18.0，使用cuda
 import os
 import sys
 import logging
 # single thread doubles cuda performance - needs to be set before torch import
-if any(arg.startswith('--execution-provider') for arg in sys.argv):
-    os.environ['OMP_NUM_THREADS'] = '1'
+# if any(arg.startswith('--execution-provider') for arg in sys.argv):
+os.environ['OMP_NUM_THREADS'] = '1'
 # reduce tensorflow log level
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 import shutil
