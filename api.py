@@ -4,6 +4,7 @@
 # @File  : api.py
 # @Author: Johnson
 # @Desc  :  API，需要安装onnxruntime-gpu==1.18.0，使用cuda
+# 需要手动安装https://github.com/TencentARC/GFPGAN,
 import os
 import sys
 import logging
@@ -38,7 +39,8 @@ class LiveCam():
         os.makedirs(self.upload_dir, exist_ok=True)
         os.makedirs(self.output_dir, exist_ok=True)
         modules.globals.headless = True
-        modules.globals.execution_providers = decode_execution_providers(["cuda"])
+        # modules.globals.execution_providers = decode_execution_providers(["cuda"])
+        modules.globals.execution_providers = decode_execution_providers(["cpu"])
         modules.globals.execution_threads = 2  # 线程会影响GPU的使用量，1个线程使用3G显存
         modules.globals.max_memory = 16  #内存使用量
 
